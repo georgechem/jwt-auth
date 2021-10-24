@@ -5,7 +5,8 @@
     "require": {
         "php": ">=8.0.0",
         "georgechem/sqlite-db": "dev-master",
-        "firebase/php-jwt": "^5.4"
+        "firebase/php-jwt": "^5.4",
+        "vlucas/phpdotenv": "^5.3"
     },
     "license": "MIT",
     "autoload": {
