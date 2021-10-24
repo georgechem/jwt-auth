@@ -67,7 +67,7 @@ class Jwt
 
     private function initVariables()
     {
-        $this->secret = $_ENV['SECRET'];
+        $this->secret = $_ENV['SERVER_SECRET'];
         $this->valid = $_ENV['TOKEN_EXPIRE'];
         $this->server = $_ENV['SERVER_NAME'];
     }
@@ -81,8 +81,10 @@ class Jwt
 
     private function isMethodAllowed():bool
     {
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
-            return true;
+        if(!empty($_SERVER['REQUEST_METHOD'])){
+            if($_SERVER['REQUEST_METHOD'] === 'POST'){
+                return true;
+            }
         }
         // TODO swap logic - testing
         return true;
