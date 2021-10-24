@@ -1,0 +1,23 @@
+{
+    "name": "georgechem/jwt-auth",
+    "description": "Simple library to generate and validate json web token",
+    "type": "library",
+    "require": {
+        "php": ">=8.0.0",
+        "georgechem/sqlite-db": "dev-master",
+        "firebase/php-jwt": "^5.4"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Georgechem\\JwtAuth\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Grzegorz Chrymecki",
+            "email": "grzegorzchrymecki@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
