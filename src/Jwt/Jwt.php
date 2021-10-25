@@ -74,13 +74,13 @@ class Jwt
 
     private function dotEnvInit()
     {
-        $i = 1;
-        do{
-            $path = dirname(__DIR__, $i);
-            $isPathCorrect = str_ends_with($path, '/jwt-auth');
-                $i++;
-        }while(!$isPathCorrect);
-
+        $path = dirname(__DIR__, 3);
+        $isPathFromComposer = str_ends_with($path, '/georgechem');
+        if($isPathFromComposer){
+            $path = dirname(__DIR__, 2);
+        }else{
+            $path = dirname(__DIR__, 5);
+        }
         print_r($path);
         $dotenv = Dotenv::createImmutable($path);
         $dotenv->load();
