@@ -2,6 +2,7 @@
 
 namespace Georgechem\JwtAuth\Jwt;
 
+use Georgechem\SqliteDb\Model\Users;
 use Dotenv\Dotenv;
 use Exception;
 
@@ -11,23 +12,21 @@ class Jwt
     private ?string $secret = null;
     private ?string $valid = null;
     private ?string $server = null;
-    private \DateTimeImmutable $issuedAt;
-    private false|\DateTimeImmutable $expire;
     private array $payload = [];
-    private ?string $tokenId = null;
-    private ?string $token = null;
-    /**
-     * @var mixed|string
-     */
     private ?string $email = null;
+    private ?string $token = null;
+    private ?string $header = null;
+    private ?object $data = null;
 
     private function __construct()
     {
         $this->init();
         $this->initVariables();
-
     }
-
+    /**
+     * Singleton
+     * @return Jwt|null
+     */
     public static function getInstance(): ?Jwt
     {
         if(!self::$instance){
@@ -35,9 +34,11 @@ class Jwt
         }
         return self::$instance;
     }
-
-
-    public function generate():string
+    /**
+     * Generate token
+     * @return self
+     */
+    public function generate():self
     {
         try{
             if(!$this->isMethodAllowed()){
@@ -53,40 +54,47 @@ class Jwt
             echo $e->getMessage();
             exit;
         }
-
         $this->prepare();
-
-        return $this->getToken();
-
+        $this->token = $this->getToken();
+        return $this;
     }
-
+    /**
+     * Init dotenv storage
+     * Details: https://github.com/vlucas/phpdotenv
+     */
     private function init()
     {
         $this->dotEnvInit();
     }
-
+    /**
+     * Read config from .env
+     */
     private function initVariables()
     {
         $this->secret = $_ENV['SERVER_SECRET'];
         $this->valid = $_ENV['TOKEN_EXPIRE'];
-        $this->server = $_ENV['SERVER_NAME'];
+        $this->server = $_ENV['SERVER_DOMAIN'];
+        $this->header = $_ENV['HEADER_NAME'];
     }
-
+    /**
+     * Dotenv init implementation
+     */
     private function dotEnvInit()
     {
         $path = dirname(__DIR__, 3);
         $isPathFromComposer = str_ends_with($path, '/georgechem');
-
         if($isPathFromComposer){
             $path = dirname(__DIR__, 5);
         }else{
             $path = dirname(__DIR__, 2);
         }
-
         $dotenv = Dotenv::createImmutable($path);
         $dotenv->load();
     }
-
+    /**
+     * Check is request method allowed
+     * @return bool
+     */
     private function isMethodAllowed():bool
     {
         if(!empty($_SERVER['REQUEST_METHOD'])){
@@ -99,44 +107,53 @@ class Jwt
         //return false;
 
     }
-
+    /**
+     * Check is user provided email & password
+     * @return bool
+     */
     private function areDataProvided():bool
     {
         if(empty($_POST['email']) || empty($_POST['password'])){
-            // TODO swap logic - testing
-            return true;
-            //return false;
+            return false;
         }
         return true;
     }
-
+    /**
+     * Check credentials in database
+     * @return bool
+     */
     private function validateCredentialsAgainstDb():bool
     {
-        // TODO
-        $this->email = $_POST['email'] ?? 'test@o2.pl';
+        $this->email = $_POST['email'] ?? null;
         $email = filter_var($this->email, FILTER_VALIDATE_EMAIL,[]);
-        $password = $_POST['password'] ?? 'test';
+        $password = $_POST['password'] ?? null;
 
-        return true;
+        $users = new Users();
+        if($email && $password) $users->insert($email, $password);
+        if(!$users->isUser($email)) return false;
+        return $users->verifyPassword($email, $password);
+
     }
-
+    /**
+     * Prepare data before token generation
+     */
     private function prepare()
     {
+        $tokenId = null;
         try {
-            $this->tokenId = base64_encode(random_bytes(16));
+            $tokenId = base64_encode(random_bytes(16));
         }catch(Exception $e){
             echo $e->getMessage();
             exit;
         }
-
-        $this->issuedAt = new \DateTimeImmutable();
-        $this->expire = $this->issuedAt->modify('+' . $this->valid);
+        $issuedAt = new \DateTimeImmutable();
+        $expire = $issuedAt->modify('+' . $this->valid);
         $this->payload = [
-            'iat' => $this->issuedAt->getTimestamp(),
-            'jti' => $this->tokenId,
+            'iat' => $issuedAt->getTimestamp(),
+            'jti' => $tokenId,
             'iss' => $this->server,
-            'nbf' => $this->issuedAt->getTimestamp(),
-            'exp' => $this->expire->getTimestamp(),
+            'nbf' => $issuedAt->getTimestamp(),
+            'exp' => $expire->getTimestamp(),
             'data' => [
                 'email' => $this->email,
                 'role' => 'user'
@@ -144,6 +161,10 @@ class Jwt
         ];
     }
 
+    /**
+     * Return Generated token
+     * @return string|void|null
+     */
     private function getToken()
     {
         try {
@@ -152,10 +173,66 @@ class Jwt
             echo $e->getMessage();
             exit;
         }
-
         return $this->token;
     }
 
+    /**
+     * Get token
+     * @return string|null
+     */
+    public function token():?string
+    {
+        return $this->token;
+    }
 
+    /**
+     * Json response
+     */
+    public function jsonResponse():void
+    {
+        // Might add headers
+        echo json_encode(['status' => '200', 'jwt' => $this->token]);
+    }
+
+    /**
+     * Verify token
+     * @param array $params
+     * @param string|null $token
+     * @return bool|void
+     */
+    public function verify(array $params = [], string $token = null)
+    {
+        $jwt = $_SERVER[$this->header] ?? $token;
+
+        try {
+            $this->data = \Firebase\JWT\JWT::decode((string) $jwt, $this->secret, ['HS512']);
+        }catch(Exception $e){
+            echo json_encode(['status' => '401', 'msg' => $e->getMessage()]);
+            exit;
+        }
+        return $this->deepVerification($params);
+    }
+
+    /**
+     * Get token decoded data
+     * @return object|null
+     */
+    public function tokenData(): ?object
+    {
+        return $this->data;
+    }
+
+    /**
+     * Perform deep verification basing on user params
+     * ['iss' => 'example.com', 'exp' => timeStamp, 'data' => ['role' => 'user'] ]
+     * @param array $params
+     * @return bool
+     */
+    private function deepVerification(array $params):bool
+    {
+        if(count($params) === 0) return true;
+
+        return false;
+    }
 
 }

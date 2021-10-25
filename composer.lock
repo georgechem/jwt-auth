@@ -69,12 +69,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/georgechem/packagist-sqlite-db.git",
-                "reference": "2d489785a9ddca3b5828e1bc4b5d5b5e5f29349b"
+                "reference": "8e9e00e79cf6862b5e97ffec94b1da4b32338ca5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/georgechem/packagist-sqlite-db/zipball/2d489785a9ddca3b5828e1bc4b5d5b5e5f29349b",
-                "reference": "2d489785a9ddca3b5828e1bc4b5d5b5e5f29349b",
+                "url": "https://api.github.com/repos/georgechem/packagist-sqlite-db/zipball/8e9e00e79cf6862b5e97ffec94b1da4b32338ca5",
+                "reference": "8e9e00e79cf6862b5e97ffec94b1da4b32338ca5",
                 "shasum": ""
             },
             "require": {
@@ -103,7 +103,7 @@
                 "issues": "https://github.com/georgechem/packagist-sqlite-db/issues",
                 "source": "https://github.com/georgechem/packagist-sqlite-db/tree/master"
             },
-            "time": "2021-10-24T09:02:34+00:00"
+            "time": "2021-10-25T09:03:58+00:00"
         },
         {
             "name": "graham-campbell/result-type",
