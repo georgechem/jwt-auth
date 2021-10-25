@@ -76,11 +76,11 @@ class Jwt
     {
         $path = dirname(__DIR__, 3);
         $isPathFromComposer = str_ends_with($path, '/georgechem');
-        print_r($path);
+
         if($isPathFromComposer){
-            $path = dirname(__DIR__, 2);
-        }else{
             $path = dirname(__DIR__, 5);
+        }else{
+            $path = dirname(__DIR__, 2);
         }
 
         $dotenv = Dotenv::createImmutable($path);
