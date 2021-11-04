@@ -129,7 +129,7 @@ class Jwt
         $password = $_POST['password'] ?? null;
 
         $users = new Users();
-        if($email && $password) $users->insert($email, $password);
+        //if($email && $password) $users->insert($email, $password);
         if(!$users->isUser($email)) return false;
         return $users->verifyPassword($email, $password);
 
