@@ -51,13 +51,19 @@ class Jwt
                 throw new Exception('User with such credentials does not exist');
             }
         }catch(Exception $e){
-            echo $e->getMessage();
+            $this->reportError($e->getMessage(), $e->getCode());
             exit;
         }
         $this->prepare();
         $this->token = $this->getToken();
         return $this;
     }
+    private function reportError(string $msg = 'Unknown error', int $code = 500):void
+    {
+        echo json_encode(['code' => $code, 'msg' => $msg]);
+
+    }
+
     /**
      * Init dotenv storage
      * Details: https://github.com/vlucas/phpdotenv
@@ -143,7 +149,7 @@ class Jwt
         try {
             $tokenId = base64_encode(random_bytes(16));
         }catch(Exception $e){
-            echo $e->getMessage();
+            $this->reportError($e->getMessage(), $e->getCode());
             exit;
         }
         $issuedAt = new \DateTimeImmutable();
@@ -170,7 +176,7 @@ class Jwt
         try {
             $this->token = \Firebase\JWT\JWT::encode($this->payload, $this->secret, 'HS512');
         }catch(Exception $e){
-            echo $e->getMessage();
+            $this->reportError($e->getMessage(), $e->getCode());
             exit;
         }
         return $this->token;
@@ -207,7 +213,7 @@ class Jwt
         try {
             $this->data = \Firebase\JWT\JWT::decode((string) $jwt, $this->secret, ['HS512']);
         }catch(Exception $e){
-            echo json_encode(['status' => '401', 'msg' => $e->getMessage()]);
+            $this->reportError($e->getMessage(), $e->getCode());
             exit;
         }
         return $this->deepVerification($params);
