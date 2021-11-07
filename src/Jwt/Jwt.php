@@ -56,6 +56,8 @@ class Jwt
         }
         $this->prepare();
         $this->token = $this->getToken();
+        $expire = time() + (int)$_ENV['COOKIE_EXPIRE'];
+        setcookie($_ENV['HEADER_NAME'], $this->token, $expire , '/', $_ENV['COOKIE_DOMAIN']);
         return $this;
     }
     private function reportError(string $msg = 'Unknown error', int $code = 500):void
@@ -217,6 +219,21 @@ class Jwt
             exit;
         }
         return $this->deepVerification($params);
+    }
+
+    public function verifyWithCookie()
+    {
+        $jwt = $_COOKIE[$_ENV['HEADER_NAME']];
+
+        try {
+            $this->data = \Firebase\JWT\JWT::decode((string) $jwt, $this->secret, ['HS512']);
+        }catch(Exception $e){
+            $this->reportError($e->getMessage(), $e->getCode());
+            exit;
+        }
+
+        return true;
+
     }
 
     /**
