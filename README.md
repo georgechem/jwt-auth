@@ -12,6 +12,8 @@ SERVER_SECRET='your server secret'
 TOKEN_EXPIRE='5 minutes' // use time according to your needs
 SERVER_DOMAIN = 'example.com' // server domain
 HEADER_NAME='jwt-token' //name of header where jwt will be put
+COOKIE_DOMAIN=localhost // for cookie verification
+COOKIE_EXPIRE=60 cookie expire time in seconds
 ```
 
 To generate token:
